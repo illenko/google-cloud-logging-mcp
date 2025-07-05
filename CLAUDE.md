@@ -100,3 +100,37 @@ Common error scenarios handled:
 - Fallback to HTTP/1.1 for Cloud SQL API (gRPC issues)
 - Comprehensive error logging to stderr for debugging
 - MCP protocol compliance for tool discovery and execution
+
+## Refactoring Plan: Convert to Google Cloud Logging MCP
+
+### Phase 1: Clean Dependencies
+- Remove unused GCP client libraries from package.json (keep only @google-cloud/logging, @google-cloud/resource-manager, google-auth-library)
+- Remove billing, compute, storage, functions, run, bigquery, container, sql dependencies
+- Update package name to "google-cloud-logging-mcp"
+- Update description to focus on logging
+
+### Phase 2: Streamline Core Architecture
+- Keep project selection and authentication (needed for logging)
+- Remove all non-logging tools (8 tools → 3 tools)
+- Keep: list-projects, select-project, get-logs
+- Remove: run-gcp-code, billing tools, gke-clusters, sql-instances
+- Simplify context creation (remove unused clients)
+
+### Phase 3: Enhance Logging Capabilities
+- Add advanced log filtering tools (by severity, time range, resource type)
+- Add log aggregation and analysis tools
+- Add real-time log streaming capability
+- Add log export functionality
+- Add structured log parsing tools
+
+### Phase 4: Update Documentation
+- Update README.md with logging-specific examples
+- Update CLAUDE.md with logging-focused architecture
+- Add logging-specific configuration examples
+- Update tool descriptions and usage patterns
+
+### Phase 5: Testing & Validation
+- Test with Claude Desktop integration
+- Validate log querying functionality
+- Test project selection workflow
+- Verify authentication flow

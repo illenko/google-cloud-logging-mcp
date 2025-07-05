@@ -1,10 +1,10 @@
 {
-  "name": "gcp-mcp",
+  "name": "google-cloud-logging-mcp",
   "version": "1.0.2",
-  "description": "Model Context Protocol (MCP) server for Google Cloud Platform - Talk to your GCP resources",
+  "description": "Model Context Protocol (MCP) server for Google Cloud Logging - Query and analyze your GCP logs",
   "main": "index.ts",
   "bin": {
-    "gcp-mcp": "./bin.js"
+    "google-cloud-logging-mcp": "./bin.js"
   },
   "scripts": {
     "start": "tsx index.ts",
@@ -23,21 +23,10 @@
   "author": "Oluwapelumi Oluwaseyi",
   "license": "MIT",
   "dependencies": {
-    "@google-cloud/bigquery": "^7.9.2",
-    "@google-cloud/billing": "^4.6.0",
-    "@google-cloud/billing-budgets": "^4.3.0",
-    "@google-cloud/compute": "^4.12.0",
-    "@google-cloud/container": "^5.19.0",
-    "@google-cloud/functions": "^3.6.1",
     "@google-cloud/logging": "^11.2.0",
     "@google-cloud/resource-manager": "^5.3.1",
-    "@google-cloud/run": "^1.5.1",
-    "@google-cloud/sql": "^0.19.1",
-    "@google-cloud/storage": "^7.15.0",
     "@modelcontextprotocol/sdk": "^1.6.1",
     "google-auth-library": "^9.0.0",
-    "googleapis": "^146.0.0",
-    "ts-morph": "^24.0.0",
     "tsx": "^4.19.2",
     "zod": "^3.24.1"
   },
@@ -48,10 +37,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/eniayomi/gcp-mcp.git"
+    "url": "git+https://github.com/eniayomi/google-cloud-logging-mcp.git"
   },
   "bugs": {
-    "url": "https://github.com/eniayomi/gcp-mcp/issues"
+    "url": "https://github.com/eniayomi/google-cloud-logging-mcp/issues"
   },
-  "homepage": "https://github.com/eniayomi/gcp-mcp#readme"
+  "homepage": "https://github.com/eniayomi/google-cloud-logging-mcp#readme"
 }
