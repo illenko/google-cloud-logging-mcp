@@ -11,7 +11,9 @@
     "prepare": "npm run build",
     "build": "tsc",
     "dev": "tsx watch index.ts",
-    "test": "tsx bin.js"
+    "test": "tsx bin.js",
+    "start:sse": "MCP_TRANSPORT=sse tsx index.ts",
+    "start:stdio": "MCP_TRANSPORT=stdio tsx index.ts"
   },
   "keywords": [
     "gcp",
@@ -20,7 +22,7 @@
     "ai",
     "llm"
   ],
-  "author": "Oluwapelumi Oluwaseyi",
+  "author": "Kostiantyn Illienko",
   "license": "MIT",
   "dependencies": {
     "@google-cloud/logging": "^11.2.0",
