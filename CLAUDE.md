@@ -16,7 +16,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Architecture Overview
 
-This is a Model Context Protocol (MCP) server that enables AI assistants to interact with Google Cloud Platform resources. The architecture consists of:
+This is a Model Context Protocol (MCP) server that enables AI assistants to interact with Google Cloud Logging. The architecture consists of:
 
 ### Core Components
 
@@ -24,7 +24,7 @@ This is a Model Context Protocol (MCP) server that enables AI assistants to inte
 - Implements MCP protocol using `@modelcontextprotocol/sdk`
 - Handles tool registration and execution
 - Manages GCP authentication and project selection
-- Provides 9 specialized tools for GCP operations
+- Provides 3 specialized tools for logging operations
 
 **bin.js** - Entry point executable
 - Simple Node.js wrapper that loads tsx and runs index.ts
@@ -32,24 +32,16 @@ This is a Model Context Protocol (MCP) server that enables AI assistants to inte
 
 ### Key Architecture Patterns
 
-**Dynamic Code Execution**: The server allows users to write TypeScript code that gets executed in a sandboxed context with access to GCP client libraries. The `run-gcp-code` tool uses ts-morph to analyze and wrap user code, automatically adding return statements to expression statements.
+**Query-Based Log Filtering**: The server provides flexible log querying through the `get-logs` tool, allowing users to specify filtering criteria directly in their queries (severity, time range, resource type, etc.) rather than requiring separate filtering tools.
 
 **State Management**: The server maintains session state for:
 - `selectedProject` - Currently selected GCP project
 - `selectedProjectCredentials` - Authentication credentials
 - `selectedRegion` - Default region (us-central1)
 
-**Client Library Integration**: Pre-configured clients for major GCP services:
-- Compute Engine (`InstancesClient`)
-- Cloud Storage (`Storage`)
-- Cloud Functions (`CloudFunctionsServiceClient`)
-- Cloud Run (`ServicesClient`)
-- BigQuery (`BigQuery`)
-- Resource Manager (`ProjectsClient`)
-- GKE (`ClusterManagerClient`)
+**Client Library Integration**: Pre-configured clients for logging operations:
 - Cloud Logging (`Logging`)
-- Cloud SQL (`SqlInstancesServiceClient`)
-- Cloud Billing (`CloudBillingClient`, `BudgetServiceClient`)
+- Resource Manager (`ProjectsClient`)
 
 **Error Handling**: Comprehensive retry logic with exponential backoff, graceful error handling for API failures, and user-friendly error messages.
 
@@ -61,28 +53,23 @@ Uses Google Auth Library with cloud-platform scope. Expects application default 
 ### Project Selection Workflow
 1. User lists available projects with `list-projects`
 2. User selects project with `select-project`
-3. All subsequent operations use the selected project
+3. All subsequent logging operations use the selected project
 
-### Supported GCP Services
-- Compute Engine (VM instances)
-- Cloud Storage (buckets and objects)
-- Cloud Functions (serverless functions)
-- Cloud Run (containerized applications)
-- BigQuery (data warehouse)
-- Cloud SQL (managed databases)
-- GKE (Kubernetes clusters)
-- Cloud Logging (centralized logging)
-- Cloud Billing (cost management)
-- Resource Manager (project management)
+### Available Tools
+- `list-projects` - List all accessible GCP projects
+- `select-project` - Select a project for logging operations
+- `get-logs` - Query and retrieve logs with flexible filtering capabilities
 
-## Code Execution Context
+## Log Querying
 
-The `run-gcp-code` tool provides a sandboxed environment with:
-- All GCP client libraries pre-instantiated
-- Helper functions like `retry()` for robust API calls
-- Access to `selectedProject`, `selectedRegion` variables
-- Automatic code wrapping to handle return statements
-- Documentation via `help()` function
+The `get-logs` tool provides flexible log querying capabilities with:
+- Support for Cloud Logging filter syntax
+- Time range filtering (e.g., "timestamp >= '2023-01-01T00:00:00Z'")
+- Severity filtering (e.g., "severity >= ERROR")
+- Resource type filtering (e.g., "resource.type = 'gce_instance'")
+- Full-text search in log messages
+- Structured field queries
+- Configurable result limits and ordering
 
 ## Error Patterns
 
@@ -97,40 +84,38 @@ Common error scenarios handled:
 
 - TypeScript compilation target: ES2020 with CommonJS modules
 - Uses tsx for development and production execution
-- Fallback to HTTP/1.1 for Cloud SQL API (gRPC issues)
 - Comprehensive error logging to stderr for debugging
 - MCP protocol compliance for tool discovery and execution
+- Focused on Google Cloud Logging operations with streamlined dependencies
 
-## Refactoring Plan: Convert to Google Cloud Logging MCP
+## Log Query Examples
 
-### Phase 1: Clean Dependencies
-- Remove unused GCP client libraries from package.json (keep only @google-cloud/logging, @google-cloud/resource-manager, google-auth-library)
-- Remove billing, compute, storage, functions, run, bigquery, container, sql dependencies
-- Update package name to "google-cloud-logging-mcp"
-- Update description to focus on logging
+### Basic Queries
+```
+severity >= ERROR
+```
 
-### Phase 2: Streamline Core Architecture
-- Keep project selection and authentication (needed for logging)
-- Remove all non-logging tools (8 tools → 3 tools)
-- Keep: list-projects, select-project, get-logs
-- Remove: run-gcp-code, billing tools, gke-clusters, sql-instances
-- Simplify context creation (remove unused clients)
+### Time-based Queries
+```
+timestamp >= "2023-01-01T00:00:00Z" AND timestamp <= "2023-01-02T00:00:00Z"
+```
 
-### Phase 3: Enhance Logging Capabilities
-- Add advanced log filtering tools (by severity, time range, resource type)
-- Add log aggregation and analysis tools
-- Add real-time log streaming capability
-- Add log export functionality
-- Add structured log parsing tools
+### Resource-specific Queries
+```
+resource.type = "gce_instance" AND resource.labels.instance_id = "my-instance"
+```
 
-### Phase 4: Update Documentation
-- Update README.md with logging-specific examples
-- Update CLAUDE.md with logging-focused architecture
-- Add logging-specific configuration examples
-- Update tool descriptions and usage patterns
+### Combined Queries
+```
+severity >= WARNING AND resource.type = "cloud_function" AND timestamp >= "2023-01-01T00:00:00Z"
+```
 
-### Phase 5: Testing & Validation
-- Test with Claude Desktop integration
-- Validate log querying functionality
-- Test project selection workflow
-- Verify authentication flow
+## Integration
+
+This MCP server is designed to work with:
+- Claude Desktop
+- Cursor IDE
+- Windsurf
+- Any MCP-compatible client
+
+The server provides seamless integration with Google Cloud Logging, allowing AI assistants to query, analyze, and retrieve logs from your GCP projects efficiently.

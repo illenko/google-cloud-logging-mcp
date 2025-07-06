@@ -1,17 +1,16 @@
-# GCP MCP
+# Google Cloud Logging MCP
 
-A Model Context Protocol (MCP) server that enables AI assistants like Claude to interact with your Google Cloud Platform environment. This allows for natural language querying and management of your GCP resources during conversations.
-
-![GCP MCP Demo](images/claude.png)
+A Model Context Protocol (MCP) server that enables AI assistants like Claude to interact with Google Cloud Logging. This allows for natural language querying and analysis of your GCP logs during conversations.
 
 ## Features
 
-* 🔍 Query and modify GCP resources using natural language
+* 🔍 Query Google Cloud Logs using natural language
 * ☁️ Support for multiple GCP projects
-* 🌐 Multi-region support
 * 🔐 Secure credential handling (no credentials are exposed to external services)
 * 🏃‍♂️ Local execution with your GCP credentials
 * 🔄 Automatic retries for improved reliability
+* 📊 Flexible log filtering by severity, time range, resource type, and more
+* 🔎 Full-text search capabilities across log entries
 
 ## Prerequisites
 
@@ -23,8 +22,8 @@ A Model Context Protocol (MCP) server that enables AI assistants like Claude to 
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/eniayomi/gcp-mcp
-cd gcp-mcp
+git clone https://github.com/illenko/google-cloud-logging-mcp
+cd google-cloud-logging-mcp
 ```
 
 2. Install dependencies:
@@ -44,9 +43,9 @@ via npm:
 ```json
 {
   "mcpServers": {
-    "gcp": {
+    "google-cloud-logging": {
       "command": "sh",
-      "args": ["-c", "npx -y gcp-mcp"]
+      "args": ["-c", "npx -y google-cloud-logging-mcp"]
     }
   }
 }
@@ -56,12 +55,12 @@ If you installed from source:
 ```json
 {
   "mcpServers": {
-    "gcp": {
+    "google-cloud-logging": {
       "command": "npm",
       "args": [
         "--silent",
         "--prefix",
-        "/path/to/gcp-mcp",
+        "/path/to/google-cloud-logging-mcp",
         "start"
       ]
     }
@@ -69,7 +68,7 @@ If you installed from source:
 }
 ```
 
-Replace `/path/to/gcp-mcp` with the actual path to your project directory if using source installation.
+Replace `/path/to/google-cloud-logging-mcp` with the actual path to your project directory if using source installation.
 
 ### Cursor
 
@@ -78,8 +77,8 @@ Replace `/path/to/gcp-mcp` with the actual path to your project directory if usi
 3. Add a new MCP configuration:
 ```json
 {
-  "gcp": {
-    "command": "npx -y gcp-mcp"
+  "google-cloud-logging": {
+    "command": "npx -y google-cloud-logging-mcp"
   }
 }
 ```
@@ -91,8 +90,8 @@ Replace `/path/to/gcp-mcp` with the actual path to your project directory if usi
 ```json
 {
   "mcpServers": {
-    "gcp": {
-      "command": "npx -y gcp-mcp"
+    "google-cloud-logging": {
+      "command": "npx -y google-cloud-logging-mcp"
     }
   }
 }
@@ -109,26 +108,19 @@ Replace `/path/to/gcp-mcp` with the actual path to your project directory if usi
 
 Start by selecting a project or asking questions like:
 * "List all GCP projects I have access to"
-* "Show me all Cloud SQL instances in project X"
-* "What's my current billing status?"
 * "Show me the logs from my Cloud Run services"
-* "List all GKE clusters in us-central1"
-* "Show me all Cloud Storage buckets in project X"
-* "What Cloud Functions are deployed in us-central1?"
-* "List all Cloud Run services"
-* "Show me BigQuery datasets and tables"
+* "Find all ERROR level logs from the last hour"
+* "Show me logs from my Compute Engine instances"
+* "Find logs containing 'timeout' in the message"
+* "Show me all WARNING and ERROR logs from today"
+* "Get logs from a specific resource type"
+* "Show me the most recent 50 log entries"
 
 ## Available Tools
 
-1. `run-gcp-code`: Execute GCP API calls using TypeScript code
-2. `list-projects`: List all accessible GCP projects
-3. `select-project`: Select a GCP project for subsequent operations
-4. `get-billing-info`: Get billing information for the current project
-5. `get-cost-forecast`: Get cost forecast for the current project
-6. `get-billing-budget`: Get billing budgets for the current project
-7. `list-gke-clusters`: List all GKE clusters in the current project
-8. `list-sql-instances`: List all Cloud SQL instances in the current project
-9. `get-logs`: Get Cloud Logging entries for the current project
+1. `list-projects`: List all accessible GCP projects
+2. `select-project`: Select a GCP project for subsequent operations
+3. `get-logs`: Get Cloud Logging entries with flexible filtering capabilities
 
 ## Example Interactions
 
@@ -142,41 +134,41 @@ List all GCP projects I have access to
 Use project my-project-id
 ```
 
-3. Check billing status:
+3. Query logs with filters:
 ```
-What's my current billing status?
-```
-
-4. View logs:
-```
-Show me the last 10 log entries from my project
+Show me all ERROR logs from the last hour
 ```
 
-## Supported Services
+4. Search logs by content:
+```
+Find logs containing "database connection" in the message
+```
 
-* Google Compute Engine
-* Cloud Storage
-* Cloud Functions
-* Cloud Run
-* BigQuery
-* Cloud SQL
-* Google Kubernetes Engine (GKE)
-* Cloud Logging
-* Cloud Billing
-* Resource Manager
-* More coming soon...
+5. Get logs from specific resources:
+```
+Show me logs from my Cloud Run services with severity WARNING or higher
+```
+
+## Log Query Capabilities
+
+* **Severity Filtering**: Filter by log levels (DEBUG, INFO, NOTICE, WARNING, ERROR, CRITICAL, ALERT, EMERGENCY)
+* **Time Range Filtering**: Query logs within specific time ranges
+* **Resource Type Filtering**: Filter by GCP resource types (gce_instance, cloud_function, cloud_run_revision, etc.)
+* **Full-text Search**: Search within log messages and structured fields
+* **Advanced Queries**: Combine multiple filters using Cloud Logging filter syntax
+* **Flexible Limits**: Control the number of results returned
 
 ## Troubleshooting
 
 To see logs:
 ```bash
-tail -n 50 -f ~/Library/Logs/Claude/mcp-server-gcp.log
+tail -n 50 -f ~/Library/Logs/Claude/mcp-server-google-cloud-logging.log
 ```
 
 Common issues:
 1. Authentication errors: Ensure you've run `gcloud auth application-default login`
-2. Permission errors: Check IAM roles for your account
-3. API errors: Verify that required APIs are enabled in your project
+2. Permission errors: Check IAM roles for your account (you need `roles/logging.viewer` or higher)
+3. API errors: Verify that the Cloud Logging API is enabled in your project
 
 ## Contributing
 
