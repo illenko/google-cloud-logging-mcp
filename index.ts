@@ -1,5 +1,6 @@
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
 import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
@@ -9,6 +10,8 @@ import { z } from "zod";
 import { GoogleAuth } from 'google-auth-library';
 import { ProjectsClient } from '@google-cloud/resource-manager';
 import { Logging, Entry } from '@google-cloud/logging';
+import { createServer } from 'http';
+import { URL } from 'url';
 
 
 // Add error handlers for uncaught exceptions and unhandled rejections
@@ -205,22 +208,104 @@ async function listAvailableProjects(): Promise<string[]> {
   }
 }
 
-// Initialize transport with error handling
-const transport = new StdioServerTransport();
+// Parse command line arguments and environment variables
+const args = process.argv.slice(2);
+const transportMode = process.env.MCP_TRANSPORT || 
+                     (args.includes('--sse') ? 'sse' : 'stdio');
+const port = process.env.MCP_PORT || args.find(arg => arg.startsWith('--port='))?.split('=')[1] || '3000';
 
 // Wrap server connection in async function for better error handling
 async function startServer() {
   try {
-    await server.connect(transport);
-    console.error("Google Cloud Logging MCP Server running on stdio");
+    if (transportMode === 'sse') {
+      await startSSEServer(parseInt(port));
+    } else {
+      await startStdioServer();
+    }
   } catch (error) {
     console.error("Failed to start Google Cloud Logging MCP Server:", error);
     process.exit(1);
   }
 }
 
+async function startStdioServer() {
+  const transport = new StdioServerTransport();
+  await server.connect(transport);
+  console.error("Google Cloud Logging MCP Server running on stdio");
+}
+
+async function startSSEServer(port: number) {
+  const transports = new Map<string, SSEServerTransport>();
+  
+  const httpServer = createServer(async (req, res) => {
+    const url = new URL(req.url!, `http://localhost:${port}`);
+    
+    if (url.pathname === '/sse') {
+      // Handle SSE connection
+      const transport = new SSEServerTransport('/message', res);
+      
+      // Store transport with its session ID for later message handling
+      const sessionId = (transport as any)._sessionId;
+      transports.set(sessionId, transport);
+      
+      // Clean up transport when connection closes
+      transport.onclose = () => {
+        transports.delete(sessionId);
+      };
+      
+      await server.connect(transport);
+      console.error(`Google Cloud Logging MCP Server running on SSE at http://localhost:${port}/sse`);
+    } else if (url.pathname === '/message') {
+      // Handle POST messages for SSE
+      const sessionId = url.searchParams.get('sessionId');
+      if (!sessionId) {
+        res.writeHead(400, { 'Content-Type': 'text/plain' });
+        res.end('Missing sessionId');
+        return;
+      }
+
+      if (req.method === 'POST') {
+        let body = '';
+        req.on('data', chunk => {
+          body += chunk.toString();
+        });
+        req.on('end', async () => {
+          try {
+            const parsedBody = JSON.parse(body);
+            const transport = transports.get(sessionId);
+            if (transport) {
+              await transport.handlePostMessage(req, res, parsedBody);
+            } else {
+              res.writeHead(404, { 'Content-Type': 'text/plain' });
+              res.end('Session not found');
+            }
+          } catch (error) {
+            console.error('Error handling POST message:', error);
+            res.writeHead(400, { 'Content-Type': 'text/plain' });
+            res.end('Invalid JSON');
+          }
+        });
+      } else {
+        res.writeHead(405, { 'Content-Type': 'text/plain' });
+        res.end('Method not allowed');
+      }
+    } else {
+      res.writeHead(404, { 'Content-Type': 'text/plain' });
+      res.end('Not found');
+    }
+  });
+
+  httpServer.listen(port, () => {
+    console.error(`Google Cloud Logging MCP Server HTTP server listening on port ${port}`);
+    console.error(`Connect to SSE at: http://localhost:${port}/sse`);
+  });
+}
+
 // Start the server
-startServer();
+startServer().catch(error => {
+  console.error('Fatal error:', error);
+  process.exit(1);
+});
 
 const createTextResponse = (text: string) => ({
   content: [{ type: "text", text }],

@@ -33,19 +33,46 @@ npm install
 
 ## Configuration
 
+### Transport Modes
+
+The server supports two transport modes:
+
+1. **stdio** (default): Standard input/output for direct integration with MCP clients
+2. **sse**: Server-Sent Events over HTTP for web-based integrations
+
+#### Environment Variables
+- `MCP_TRANSPORT`: Set to "sse" or "stdio" (default: "stdio")
+- `MCP_PORT`: Port for SSE mode (default: "3000")
+
+#### Command Line Arguments
+- `--sse`: Enable SSE mode
+- `--port=3000`: Set port for SSE mode
+
 ### Claude Desktop
 
 1. Open Claude desktop app and go to Settings -> Developer -> Edit Config
 
 2. Add the following entry to your `claude_desktop_config.json`:
 
-via npm:
+**stdio mode (default):**
 ```json
 {
   "mcpServers": {
     "google-cloud-logging": {
       "command": "sh",
       "args": ["-c", "npx -y google-cloud-logging-mcp"]
+    }
+  }
+}
+```
+
+**SSE mode:**
+```json
+{
+  "mcpServers": {
+    "google-cloud-logging": {
+      "command": "sh",
+      "args": ["-c", "MCP_TRANSPORT=sse MCP_PORT=3000 npx -y google-cloud-logging-mcp"]
     }
   }
 }
@@ -75,6 +102,8 @@ Replace `/path/to/google-cloud-logging-mcp` with the actual path to your project
 1. Open Cursor and go to Settings (⌘,)
 2. Navigate to AI -> Model Context Protocol
 3. Add a new MCP configuration:
+
+**stdio mode (default):**
 ```json
 {
   "google-cloud-logging": {
@@ -83,15 +112,45 @@ Replace `/path/to/google-cloud-logging-mcp` with the actual path to your project
 }
 ```
 
+**SSE mode:**
+```json
+{
+  "google-cloud-logging": {
+    "command": "npx -y google-cloud-logging-mcp",
+    "env": {
+      "MCP_TRANSPORT": "sse",
+      "MCP_PORT": "3000"
+    }
+  }
+}
+```
+
 ### Windsurf
 
 1. Open `~/.windsurf/config.json` (create if it doesn't exist)
 2. Add the MCP configuration:
+
+**stdio mode (default):**
 ```json
 {
   "mcpServers": {
     "google-cloud-logging": {
       "command": "npx -y google-cloud-logging-mcp"
+    }
+  }
+}
+```
+
+**SSE mode:**
+```json
+{
+  "mcpServers": {
+    "google-cloud-logging": {
+      "command": "npx -y google-cloud-logging-mcp",
+      "env": {
+        "MCP_TRANSPORT": "sse",
+        "MCP_PORT": "3000"
+      }
     }
   }
 }
